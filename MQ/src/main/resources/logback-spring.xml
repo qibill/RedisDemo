@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--scan:当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true-->
+<!--scanPeriod:设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。当scan为true时，此属性生效。默认的时间间隔为1分钟-->
+<!--debug:当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false-->
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+    <!--每个logger都关联到logger上下文，默认上下文名称为“default”。但可以使用设置成其他名字，用于区分不同应用程序的记录。一旦设置，不能修改,可以通过%contextName来打印日志上下文名称-->
+    <contextName>logback</contextName>
+    <!--用来定义变量值的标签，有两个属性，name和value；其中name的值是变量的名称，value的值时变量定义的值。通过定义的值会被插入到logger上下文中。定义变量后，可以使“${}”来使用变量-->
+    <property name="log.path" value="logs" />
+    <!--输出到控制台-->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <!--ThresholdFilter为系统定义的拦截器，例如我们用ThresholdFilter来过滤掉ERROR级别以下的日志不输出到文件中。如果不用记得注释掉，不然你控制台会发现没日志-->
+        <!-- <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+             <level>ERROR</level>
+         </filter>-->
+        <encoder>
+            <!--
+                * %d{HH: mm:ss.SSS}——日志输出时间
+                * %thread——输出日志的进程名字，这在Web应用以及异步任务处理中很有用
+                * %-5level——日志级别，并且使用5个字符靠左对齐
+                * %logger{36}——日志输出者的名字
+                * %msg——日志消息
+                * %n——平台的换行符
+            -->
+            <pattern>%d{HH:mm:ss.SSS} %contextName [%thread] %-5level %logger{36}.%M:%L - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--输出到文件-->
+    <!--RollingFileAppender用于切分文件日志-->
+    <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--可同时兼顾size和time的方案-->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!--把每一天的日志归档到一个文件中-->
+            <!--如果想把日志直接放到当前项目下，把${log.path}/去掉即可-->
+            <fileNamePattern>${log.path}/MQ/logback_%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!--只保留最近30天的日志-->
+            <maxHistory>30</maxHistory>
+            <!--日志文件的上限大小，到了这个值，就会删除旧的日志-->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %contextName [%thread] %-5level %logger{36}.%M:%L - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--level:用来设置打印级别，大小写无关：TRACE, DEBUG, INFO, WARN, ERROR, ALL和OFF，不能设置为INHERITED或者同义词NULL-->
+    <!--默认是DEBUG-->
+    <root level="DEBUG">
+        <appender-ref ref="console" />
+        <appender-ref ref="file" />
+    </root>
+
+    <!--
+        name:用来指定受此logger约束的某一个包或者具体的某一个类
+        level:用来设置打印级别，大小写无关：TRACE, DEBUG, INFO, WARN, ERROR, ALL 和 OFF，还有一个特俗值INHERITED或者同义词NULL，代表强制执行上级的级别
+        addtivity:是否向上级logger传递打印信息。默认是true
+    -->
+    <!--如果未设置level属性，那么当前logger将会继承上级的级别。-->
+    <logger name="com.biosan" level="DEBUG"/>
+    <logger name="org.quartz" level="INFO" />
+    <logger name="org.apache.http" level="INFO" />
+</configuration>
